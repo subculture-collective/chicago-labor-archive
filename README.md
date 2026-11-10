@@ -84,8 +84,20 @@ environment.
 
 ## Deploy
 
-1. Build the frontend image with `deploy/frontend.Dockerfile`. It serves the
-   built site from nginx using `deploy/frontend-nginx.conf`.
+1. Build the frontend image from the repository root. Pass an npm config for
+   the `@subcult` registry as the `npmrc` build secret, and point nginx at the
+   engine's Compose service name:
+
+   ```sh
+   DOCKER_BUILDKIT=1 docker build -f deploy/frontend.Dockerfile \
+     --build-arg CORE_UPSTREAM=core:8080 \
+     --secret id=npmrc,src=web/.npmrc \
+     -t chicago-labor-archive-web .
+   ```
+
+   The image serves the built site from nginx on port 8080 using
+   `deploy/frontend-nginx.conf`. Without `CORE_UPSTREAM` it proxies `/api` to
+   `api:8080`, which does not exist in `deploy/compose.yml`.
 2. Copy `deploy/compose.yml` to the server, create the `.env` above and the
    database password and URL files under `runtime/`.
 3. Start the database and run migrations with the operator profile:
